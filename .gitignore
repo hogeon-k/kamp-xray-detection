@@ -1,0 +1,82 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+*.egg
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# VS Code / IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment / secrets
+.env
+.env.*
+*.key
+*.pem
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Raw dataset
+dataset/
+datasets/
+
+# YOLO / model weights
+weights/
+*.pt
+*.pth
+*.onnx
+*.engine
+*.torchscript
+
+# Ultralytics default runs
+runs/
+
+# Project generated outputs (ignored by default)
+outputs/*
+
+# Keep the small, reusable YOLO dataset configuration and its documentation
+!outputs/yolo_poc_20/
+outputs/yolo_poc_20/*
+!outputs/yolo_poc_20/dataset.yaml
+!outputs/yolo_poc_20/README.md
+
+# Keep only the cross-experiment summary; individual runs stay ignored
+!outputs/yolo_runs/
+outputs/yolo_runs/*
+!outputs/yolo_runs/experiments.csv
+
+# Temporary / cache
+tmp/
+temp/
+cache/
+.cache/
+
+# Logs
+*.log
+
+# Large archives
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
