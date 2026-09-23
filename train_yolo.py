@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(r"C:\workspace\Kamp_Xray")
-DATA_YAML = r"C:\workspace\Kamp_Xray\outputs\yolo_poc_20\dataset.yaml"
+DATA_YAML = r"C:\workspace\Kamp_Xray\outputs\yolo_poc_20_fake_restoration\dataset.yaml"
 RUNS_DIR = ROOT / "outputs" / "yolo_runs"
 EXPERIMENT_INDEX = RUNS_DIR / "experiments.csv"
 VENV_PYTHON = ROOT / ".venv" / "Scripts" / "python.exe"
@@ -20,7 +20,7 @@ VENV_PYTHON = ROOT / ".venv" / "Scripts" / "python.exe"
 
 # Edit only CONFIG to define the next experiment.
 CONFIG: dict[str, Any] = {
-    "preprocessing": "telea",
+    "preprocessing": "telea_fake_restoration",
     "model": "yolo26n.pt",
     "data": DATA_YAML,
     "epochs": 200,

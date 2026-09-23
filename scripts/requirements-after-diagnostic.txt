@@ -1,0 +1,4 @@
+# Additional dependencies for after-only diagnostics; existing requirements remain unchanged.
+scipy==1.18.1
+scikit-learn==1.9.1
+matplotlib==3.11.2

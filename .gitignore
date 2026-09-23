@@ -54,6 +54,14 @@ runs/
 # Project generated outputs (ignored by default)
 outputs/*
 
+# Generated restoration datasets and diagnostic artifacts
+outputs/inpainting_poc_20/
+outputs/yolo_poc_20_fake_restoration/
+outputs/fake_restoration_debug/
+outputs/restoration_diagnostics/
+outputs/restoration_after_similarity/
+outputs/context_matched_restoration/
+
 # Keep the small, reusable YOLO dataset configuration and its documentation
 !outputs/yolo_poc_20/
 outputs/yolo_poc_20/*
