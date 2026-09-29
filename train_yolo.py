@@ -1,4 +1,4 @@
-"""Run reproducible Ultralytics YOLO experiments on the TELEA PoC dataset."""
+"""Run reproducible YOLO11n Baseline experiments on the 512-image TELEA dataset."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(r"C:\workspace\Kamp_Xray")
-DATA_YAML = r"C:\workspace\Kamp_Xray\outputs\yolo_poc_20_fake_restoration\dataset.yaml"
+DATA_YAML = r"C:\workspace\Kamp_Xray\outputs\yolo_512_telea\dataset.yaml"
 RUNS_DIR = ROOT / "outputs" / "yolo_runs"
 EXPERIMENT_INDEX = RUNS_DIR / "experiments.csv"
 VENV_PYTHON = ROOT / ".venv" / "Scripts" / "python.exe"
@@ -20,14 +20,14 @@ VENV_PYTHON = ROOT / ".venv" / "Scripts" / "python.exe"
 
 # Edit only CONFIG to define the next experiment.
 CONFIG: dict[str, Any] = {
-    "preprocessing": "telea_fake_restoration",
-    "model": "yolo26n.pt",
+    "preprocessing": "telea_512",
+    "model": "yolo11n.pt",
     "data": DATA_YAML,
     "epochs": 200,
     # Small-object experiment candidates:
     # imgsz = 640 / 960 / 1280
-    "imgsz": 640,
-    "batch": 8,
+    "imgsz": 1280,
+    "batch": 4,
     "device": 0,
     "workers": 4,
     "optimizer": "AdamW",
@@ -40,7 +40,7 @@ CONFIG: dict[str, Any] = {
     "seed": 42,
     "deterministic": True,
     "pretrained": True,
-    # Overfit sanity test: all augmentations are disabled.
+    # TELEA Baseline: retain the existing disabled augmentation settings.
     "degrees": 0.0,
     "translate": 0.0,
     "scale": 0.0,
@@ -285,7 +285,7 @@ def _resolve_dataset_root(config: dict[str, Any], dataset_yaml_path: Path) -> Pa
 def _resolve_split_path(dataset_root: Path, value: Any, split: str) -> Path:
     if not isinstance(value, str):
         raise UserFacingError(
-            f"dataset.yaml entry '{split}' must be a directory path string for this PoC."
+            f"dataset.yaml entry '{split}' must be a directory path string."
         )
     path = Path(value)
     if not path.is_absolute():
@@ -407,7 +407,7 @@ def save_environment(run_dir: Path, environment: dict[str, str]) -> Path:
 def run_training(
     YOLO: Any, config: dict[str, Any], run_name: str
 ) -> tuple[Any, Path, Path]:
-    print("\nStarting YOLO11n TELEA experiment training...")
+    print("\nStarting YOLO11n 512-image TELEA Baseline training...")
     model = YOLO(config["model"])
     train_args = {
         key: value for key, value in config.items() if key not in NON_TRAIN_CONFIG_KEYS
@@ -655,10 +655,11 @@ def run() -> None:
     val_metrics = run_validation(best_model, run_dir)
     test_metrics = run_test(best_model, run_dir)
 
-    print("\nWARNING:")
-    print("This is a 20-image PoC dataset.")
-    print("Validation and test metrics are not statistically reliable.")
-    print("Use these results only for pipeline sanity checking.")
+    print(f"\nDataset: {dataset_root}")
+    print(
+        f"Split images: train={counts['train_images']}, "
+        f"val={counts['val_images']}, test={counts['test_images']}"
+    )
     prediction_dir = run_prediction(best_model, dataset_root, run_dir)
 
     end_time = datetime.now().astimezone()
