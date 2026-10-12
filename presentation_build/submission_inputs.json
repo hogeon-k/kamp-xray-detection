@@ -1,0 +1,79 @@
+{
+  "input_files": [
+    {
+      "path": "C:\\workspace\\Kamp_Xray\\PRESENTATION_PLAN.md",
+      "sha256": "cefa8ff26ae1f670ec03bb899df9e73740723c1483c8627f0ef22688f5f38e1d"
+    },
+    {
+      "path": "C:\\workspace\\Kamp_Xray\\SLIDE_CONTENT.md",
+      "sha256": "c5c340df8246acb0a8c55336f3016b2e2b03cfd9b0739c4380a10c077a569e66"
+    },
+    {
+      "path": "C:\\workspace\\Kamp_Xray\\SELECTED_FIGURES.md",
+      "sha256": "d9f3f579b50370b0f4dfb3bd67246442cb42c0f740b83de60f6b94c92d81eafe"
+    },
+    {
+      "path": "C:\\workspace\\Kamp_Xray\\FINAL_REPORT_DRAFT.md",
+      "sha256": "1d1e194288259563e4d3e8ad78f5ede4480c58bafe2d0ae49ea87e715214ae8f"
+    },
+    {
+      "path": "C:\\workspace\\Kamp_Xray\\FINAL_SUBMISSION_AUDIT.md",
+      "sha256": "44b20f7ed31700f93fe2c70432f41a61710d8d4bae65aeea3deb4162fd43b9e2"
+    }
+  ],
+  "selected_figure_image_paths": [
+    {
+      "path": "C:/workspace/Kamp_Xray/outputs/error_analysis/fn/U0138_FN_gt0.png",
+      "exists": true
+    },
+    {
+      "path": "C:/workspace/Kamp_Xray/outputs/error_analysis/fn/U0488_FN_gt0.png",
+      "exists": true
+    },
+    {
+      "path": "C:/workspace/Kamp_Xray/outputs/error_analysis/fp/U0371_FP_pred0.png",
+      "exists": true
+    },
+    {
+      "path": "C:/workspace/Kamp_Xray/outputs/error_analysis/summary/fn_condition_rates.png",
+      "exists": true
+    },
+    {
+      "path": "C:/workspace/Kamp_Xray/outputs/inpainting_poc_20/figures/01_4184354a2a3c_comparison.png",
+      "exists": true
+    },
+    {
+      "path": "C:/workspace/Kamp_Xray/outputs/safety_threshold_policy/visualizations/val_threshold_curve.png",
+      "exists": true
+    },
+    {
+      "path": "C:/workspace/Kamp_Xray/outputs/shortcut_diagnostic_dataset_gpu/masks/pair_0002.png",
+      "exists": true
+    },
+    {
+      "path": "C:/workspace/Kamp_Xray/outputs/shortcut_diagnostic_gpu/cases/E_largest_delta_pair_0002/overlay.png",
+      "exists": true
+    },
+    {
+      "path": "C:/workspace/Kamp_Xray/outputs/shortcut_diagnostic_gpu/plots/fr_fpr_comparison.png",
+      "exists": true
+    },
+    {
+      "path": "C:/workspace/Kamp_Xray/outputs/yolo_512_telea/images/train/001_20200814_163105(1).png",
+      "exists": true
+    },
+    {
+      "path": "C:/workspace/Kamp_Xray/outputs/yolo_runs/telea_512_yolo11n_e200_img1280_b4_adamw_lr0.001_wd0.0005_noaug_s42/results.png",
+      "exists": true
+    },
+    {
+      "path": "C:/workspace/Kamp_Xray/outputs/yolo_runs/telea_512_yolo11n_e200_img1280_b4_adamw_lr0.001_wd0.0005_noaug_s42/validation/BoxPR_curve.png",
+      "exists": true
+    },
+    {
+      "path": "C:/workspace/Kamp_Xray/submission_audit/official_test_confusion.png",
+      "exists": true
+    }
+  ],
+  "missing_images": []
+}

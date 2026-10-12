@@ -9,6 +9,8 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .coverage
+.coverage.*
+coverage.xml
 htmlcov/
 build/
 dist/
@@ -30,6 +32,8 @@ desktop.ini
 # Environment / secrets
 .env
 .env.*
+!.env.example
+!.env.template
 *.key
 *.pem
 
@@ -80,3 +84,35 @@ cache/
 *.rar
 *.tar
 *.tar.gz
+
+# Generated submission package (copies sources, datasets and model artifacts)
+/KAMP_Xray_Submission/
+
+# Exported presentation files
+/presentation/
+/KAMP_Xray_Presentation.pdf
+
+# Presentation build artifacts; keep reusable build scripts and input specs
+/presentation_build/*
+!/presentation_build/*.py
+!/presentation_build/*.js
+!/presentation_build/*.mjs
+!/presentation_build/slides.json
+!/presentation_build/*_specs.json
+!/presentation_build/*_inputs.json
+!/presentation_build/package.json
+!/presentation_build/package-lock.json
+
+# Audit outputs; keep the scripts used to reproduce the checks
+/report_audit/*
+!/report_audit/*.py
+/submission_audit/*
+!/submission_audit/*.py
+/verification.json
+
+# JavaScript dependencies and local temporary files
+node_modules/
+*.tsbuildinfo
+~$*
+*.tmp
+*.bak

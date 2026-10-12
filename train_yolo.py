@@ -21,12 +21,12 @@ VENV_PYTHON = ROOT / ".venv" / "Scripts" / "python.exe"
 # Edit only CONFIG to define the next experiment.
 CONFIG: dict[str, Any] = {
     "preprocessing": "telea_512",
-    "model": "yolo11n.pt",
+    "model": "yolov8n.pt",
     "data": DATA_YAML,
     "epochs": 200,
     # Small-object experiment candidates:
     # imgsz = 640 / 960 / 1280
-    "imgsz": 1280,
+    "imgsz": 640,
     "batch": 4,
     "device": 0,
     "workers": 4,
@@ -40,19 +40,26 @@ CONFIG: dict[str, Any] = {
     "seed": 42,
     "deterministic": True,
     "pretrained": True,
-    # TELEA Baseline: retain the existing disabled augmentation settings.
+    # Shared augmentation settings for the YOLOv8n / YOLO11n 640/batch4 comparison.
     "degrees": 0.0,
-    "translate": 0.0,
-    "scale": 0.0,
+    "translate": 0.005,
+    "scale": 0.2,
     "shear": 0.0,
     "perspective": 0.0,
     "flipud": 0.0,
     "fliplr": 0.0,
-    "mosaic": 0.0,
+    "mosaic": 0.2,
     "mixup": 0.0,
     "hsv_h": 0.0,
     "hsv_s": 0.0,
     "hsv_v": 0.0,
+    # Train-only intensity augmentation. Noise std is in 0-255 pixel units.
+    "gamma_p": 0.20,
+    "gamma_min": 0.90,
+    "gamma_max": 1.10,
+    "noise_p": 0.0,
+    "noise_std_min": 1.0,
+    "noise_std_max": 3.0,
     "project": str(RUNS_DIR),
     "exist_ok": False,
     "plots": True,
@@ -91,7 +98,15 @@ AUGMENTATION_ABBREVIATIONS = {
     "hsv_s": "hsvs",
     "hsv_v": "hsvv",
 }
-NON_TRAIN_CONFIG_KEYS = {"preprocessing", "model", "conf"}
+XRAY_AUGMENTATION_KEYS = {
+    "gamma_p",
+    "gamma_min",
+    "gamma_max",
+    "noise_p",
+    "noise_std_min",
+    "noise_std_max",
+}
+NON_TRAIN_CONFIG_KEYS = {"preprocessing", "model", "conf"} | XRAY_AUGMENTATION_KEYS
 EXPERIMENT_INDEX_FIELDS = (
     "run_name",
     "date",
@@ -132,9 +147,6 @@ def _compact_number(value: Any) -> str:
 
 def augmentation_label(config: dict[str, Any]) -> str:
     active = [key for key in AUGMENTATION_KEYS if float(config.get(key, 0.0)) != 0.0]
-    if not active:
-        return "noaug"
-
     # Keep the folder name readable while exposing up to three dominant settings.
     details = [
         f"{AUGMENTATION_ABBREVIATIONS[key]}{_compact_number(config[key])}"
@@ -142,7 +154,80 @@ def augmentation_label(config: dict[str, Any]) -> str:
     ]
     if len(active) > 3:
         details.append(f"x{len(active) - 3}")
-    return "aug_" + "_".join(details)
+    if float(config.get("gamma_p", 0)) > 0:
+        details.append(
+            f"gam{_compact_number(config['gamma_min'])}-{_compact_number(config['gamma_max'])}"
+            f"p{_compact_number(config['gamma_p'])}"
+        )
+    if float(config.get("noise_p", 0)) > 0:
+        details.append(
+            f"noise{_compact_number(config['noise_std_min'])}-{_compact_number(config['noise_std_max'])}"
+            f"p{_compact_number(config['noise_p'])}"
+        )
+    return "aug_" + "_".join(details) if details else "noaug"
+
+
+def validate_xray_augmentation(config: dict[str, Any]) -> None:
+    import math
+
+    for key in XRAY_AUGMENTATION_KEYS:
+        if not math.isfinite(float(config[key])):
+            raise UserFacingError(f"{key} must be finite.")
+    for key in ("gamma_p", "noise_p"):
+        if not 0 <= float(config[key]) <= 1:
+            raise UserFacingError(f"{key} must be between 0 and 1.")
+    if not 0 < config["gamma_min"] <= config["gamma_max"]:
+        raise UserFacingError("Gamma range must satisfy 0 < gamma_min <= gamma_max.")
+    if not 0 <= config["noise_std_min"] <= config["noise_std_max"] <= 255:
+        raise UserFacingError("Noise std range must satisfy 0 <= min <= max <= 255.")
+
+
+def build_xray_trainer(config: dict[str, Any]) -> Any:
+    """Apply intensity changes to training batches only, after YOLO normalization.
+
+    Validation uses Ultralytics' validator and never calls this trainer hook.
+    PyTorch's seeded RNG is used; the same noise is shared by all color channels
+    so grayscale X-rays remain grayscale. Annotation tensors are untouched.
+    """
+    import torch
+    from ultralytics.models.yolo.detect import DetectionTrainer
+
+    validate_xray_augmentation(config)
+    settings = {key: float(config[key]) for key in XRAY_AUGMENTATION_KEYS}
+
+    class XrayDetectionTrainer(DetectionTrainer):
+        def preprocess_batch(self, batch: dict) -> dict:
+            batch = super().preprocess_batch(batch)
+            image = batch["img"]
+            shape = (image.shape[0], 1, 1, 1)
+            if settings["gamma_p"] > 0:
+                apply = torch.rand(shape, device=image.device) < settings["gamma_p"]
+                gamma = torch.empty(shape, device=image.device).uniform_(
+                    settings["gamma_min"], settings["gamma_max"]
+                )
+                # Direct exponent convention: output = input ** gamma.
+                image = torch.where(apply, image.clamp(0, 1).pow(gamma), image)
+            if settings["noise_p"] > 0:
+                apply = torch.rand(shape, device=image.device) < settings["noise_p"]
+                std = (
+                    torch.empty(shape, device=image.device).uniform_(
+                        settings["noise_std_min"], settings["noise_std_max"]
+                    )
+                    / 255.0
+                )
+                noise = (
+                    torch.randn(
+                        (image.shape[0], 1, image.shape[2], image.shape[3]),
+                        device=image.device,
+                        dtype=image.dtype,
+                    )
+                    * std
+                )
+                image = torch.where(apply, (image + noise).clamp(0, 1), image)
+            batch["img"] = image
+            return batch
+
+    return XrayDetectionTrainer
 
 
 def build_run_name(config: dict[str, Any]) -> str:
@@ -407,12 +492,14 @@ def save_environment(run_dir: Path, environment: dict[str, str]) -> Path:
 def run_training(
     YOLO: Any, config: dict[str, Any], run_name: str
 ) -> tuple[Any, Path, Path]:
-    print("\nStarting YOLO11n 512-image TELEA Baseline training...")
+    print(f"\nStarting {config['model']} 512-image TELEA training...")
     model = YOLO(config["model"])
     train_args = {
         key: value for key, value in config.items() if key not in NON_TRAIN_CONFIG_KEYS
     }
     train_args["name"] = run_name
+    if config.get("gamma_p", 0) > 0 or config.get("noise_p", 0) > 0:
+        train_args["trainer"] = build_xray_trainer(config)
     results = model.train(**train_args)
 
     expected_run_dir = Path(config["project"]) / run_name
@@ -612,6 +699,7 @@ def _print_metrics(title: str, metrics: dict[str, float]) -> None:
 
 
 def run() -> None:
+    validate_xray_augmentation(CONFIG)
     start_time = datetime.now().astimezone()
     base_run_name = build_run_name(CONFIG)
     run_name = get_unique_run_name(Path(CONFIG["project"]), base_run_name)
@@ -619,6 +707,8 @@ def run() -> None:
         raise UserFacingError("Generated run name does not match the current CONFIG.")
     if (
         all(float(CONFIG[key]) == 0.0 for key in AUGMENTATION_KEYS)
+        and CONFIG["gamma_p"] == 0
+        and CONFIG["noise_p"] == 0
         and "noaug" not in run_name
     ):
         raise UserFacingError(
